@@ -5,23 +5,61 @@ const app = express();
 const fs = require('fs');
 const qrcode = require('qrcode-terminal');
 const os = require('os');
+const AdmZip = require('adm-zip');
 
-
+//get args
 
 var args = require("minimist")(process.argv.slice(2),{ string: 'file' });
+
+//zip file function
+
+function zip(zipFileName, path) {
+
+    const zip = new AdmZip();
+
+    zip.addLocalFolder(path, path);
+
+    zip.writeZip(zipFileName);
+
+    console.log("Done Zipping Now You Can Download");
+
+}
+
 
 
 //Routes
 app.get('/', (req, res) => res.send('Hello World!'))
 
 app.get('/download', function(req, res){
-  var file = __dirname + '/' + args.file;
 
-  res.download(file); // Set disposition and send it.
+    if(fs.existsSync(__dirname + "/temp.zip")){
+
+        fs.unlink(__dirname + "/temp.zip");
+
+    }
+    if (fs.existsSync(args.file)) {
+
+
+        if (fs.lstatSync(args.file).isDirectory() ) {
+            console.log("This is a directory will be available for download after zipping the files");
+
+            zip("temp.zip", args.file);
+
+            res.download(__dirname + "/temp.zip");
+
+        }
+        else {
+            console.log("File will be available for download shortly");
+            res.download(args.file); // Set disposition and send it.
+        }
+    }
+
+    else {
+        console.log("not a valid file/path");
+    }
 
 });
 
-//args
 
 
 
